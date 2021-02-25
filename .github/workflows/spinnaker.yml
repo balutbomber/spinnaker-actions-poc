@@ -30,9 +30,8 @@ jobs:
     - name: Create ubuntu user
       run: |
         groupadd ubuntu
-        useradd -g ubuntu -G admin -s /bin/bash -d /home/ubuntu ubuntu
-        mkdir -p /home/ubuntu
-        cp -r /root/.ssh /home/ubuntu/.ssh
+        useradd -g ubuntu -s /bin/bash -d /home/ubuntu ubuntu
+        sudo mkdir -p /home/ubuntu
         chown -R ubuntu:ubuntu /home/ubuntu
         echo "ubuntu	ALL=(ALL:ALL) NOPASSWD:ALL" >> /etc/sudoers     
     
