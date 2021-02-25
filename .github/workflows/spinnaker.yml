@@ -33,7 +33,7 @@ jobs:
         sudo useradd -g ubuntu -s /bin/bash -d /home/ubuntu ubuntu
         sudo mkdir -p /home/ubuntu
         sudo chown -R ubuntu:ubuntu /home/ubuntu
-        sudo echo "ubuntu	ALL=(ALL:ALL) NOPASSWD:ALL" >> /etc/sudoers     
+        sudo sh -c 'echo "ubuntu	ALL=(ALL:ALL) NOPASSWD:ALL" >> /etc/sudoers'
     
     - name: Install Hallyard
       run: |
