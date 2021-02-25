@@ -34,9 +34,16 @@ jobs:
         sudo mkdir -p /home/ubuntu
         sudo chown -R ubuntu:ubuntu /home/ubuntu
         sudo sh -c 'echo "ubuntu	ALL=(ALL:ALL) NOPASSWD:ALL" >> /etc/sudoers'
+
+    - name: Get Kube Config
+      run: |
+        su - ubuntu
+        aws eks update-kubeconfig --name eks-spinnaker --region us-east-1 --alias eks-spinnaker
+        cat ~/.kub/config    
     
     - name: Install Hallyard
       run: |
         curl -O https://raw.githubusercontent.com/spinnaker/halyard/master/install/debian/InstallHalyard.sh
         sudo bash InstallHalyard.sh --user ubuntu && echo "success" || echo "failure"
+
 
