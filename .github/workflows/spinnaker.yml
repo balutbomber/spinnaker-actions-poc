@@ -47,6 +47,7 @@ jobs:
     - name: Move Halyard config to default area
       run: |
         mkdir .hal
+        ls -al
         mv halconfig ~/.hal/config
 
     - name: Deploy Spinnaker
