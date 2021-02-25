@@ -29,12 +29,11 @@ jobs:
 
     - name: Create ubuntu user
       run: |
-        whoami
         sudo groupadd ubuntu
-        useradd -g ubuntu -s /bin/bash -d /home/ubuntu ubuntu
+        sudo useradd -g ubuntu -s /bin/bash -d /home/ubuntu ubuntu
         sudo mkdir -p /home/ubuntu
-        chown -R ubuntu:ubuntu /home/ubuntu
-        echo "ubuntu	ALL=(ALL:ALL) NOPASSWD:ALL" >> /etc/sudoers     
+        sudo chown -R ubuntu:ubuntu /home/ubuntu
+        sudo echo "ubuntu	ALL=(ALL:ALL) NOPASSWD:ALL" >> /etc/sudoers     
     
     - name: Install Hallyard
       run: |
