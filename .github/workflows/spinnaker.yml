@@ -37,9 +37,9 @@ jobs:
 
     - name: Get Kube Config
       run: |
-        su - ubuntu
-        aws eks update-kubeconfig --name eks-spinnaker --region us-east-1 --alias eks-spinnaker
-        cat ~/.kub/config    
+        sudo -i -u ubuntu aws eks update-kubeconfig --name eks-spinnaker --region us-east-1 --alias eks-spinnaker
+        sudo -i -u ubuntu cat pwd
+        sudo -i -u ubuntu cat ~/.kub/config    
     
     - name: Install Hallyard
       run: |
