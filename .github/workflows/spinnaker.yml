@@ -38,12 +38,18 @@ jobs:
     - name: Get Kube Config
       run: |
         aws eks update-kubeconfig --name eks-spinnaker --region us-east-1 --alias eks-spinnaker
-        pwd
-        cat ~/.kub/config    
     
     - name: Install Hallyard
       run: |
         curl -O https://raw.githubusercontent.com/spinnaker/halyard/master/install/debian/InstallHalyard.sh
-        sudo bash InstallHalyard.sh --user ubuntu && echo "success" || echo "failure"
+        sudo bash InstallHalyard.sh --user runer && echo "success" || echo "failure"
+
+    - name: Move Halyard config to default area
+      run: |
+        mv halconfig ~/.hal/config
+
+    - name: Deploy Spinnaker
+      run: |
+        hal deploy apply --no-validate
 
 
