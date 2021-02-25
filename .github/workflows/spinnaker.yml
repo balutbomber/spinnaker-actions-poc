@@ -13,6 +13,13 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v2
 
+    - name: Setup Java
+    - uses: actions/setup-java@v1
+      with:
+        java-version: '11'
+        java-package: jdk
+        architecture: x64 
+
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v1
       with:
@@ -20,6 +27,17 @@ jobs:
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: us-east-1
 
-    - name: List s3 buckets
-      run: aws s3 ls
-
+    - name: Create ubuntu user
+      run: |
+        groupadd ubuntu
+        useradd -g ubuntu -G admin -s /bin/bash -d /home/ubuntu ubuntu
+        mkdir -p /home/ubuntu
+        cp -r /root/.ssh /home/ubuntu/.ssh
+        chown -R ubuntu:ubuntu /home/ubuntu
+        echo "ubuntu	ALL=(ALL:ALL) NOPASSWD:ALL" >> /etc/sudoers     
+    
+    - name: Install Hallyard
+      run: |
+        su - ubuntu
+        curl -O https://raw.githubusercontent.com/spinnaker/halyard/master/install/debian/InstallHalyard.sh
+        sudo bash InstallHalyard.sh --user ubuntu
