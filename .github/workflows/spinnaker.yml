@@ -30,7 +30,7 @@ jobs:
     - name: Create ubuntu user
       run: |
         whoami
-        groupadd ubuntu
+        sudo groupadd ubuntu
         useradd -g ubuntu -s /bin/bash -d /home/ubuntu ubuntu
         sudo mkdir -p /home/ubuntu
         chown -R ubuntu:ubuntu /home/ubuntu
