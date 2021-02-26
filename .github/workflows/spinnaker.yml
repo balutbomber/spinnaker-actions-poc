@@ -68,9 +68,13 @@ jobs:
     - name: Move Halyard config to default area
       run: |
         mkdir .hal
-        ls -al
         mv halconfig .hal/config
 
+    - name: Set Version
+      run: |
+        export VERSION=1.19.2
+        hal config version edit --version $VERSION
+    
     - name: Deploy Spinnaker
       run: |
         hal deploy apply --no-validate
