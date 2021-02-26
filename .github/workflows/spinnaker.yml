@@ -69,6 +69,7 @@ jobs:
       run: |
         mkdir .hal
         mv halconfig .hal/config
+        cat .hal/config
 
     - name: Set Version
       run: |
