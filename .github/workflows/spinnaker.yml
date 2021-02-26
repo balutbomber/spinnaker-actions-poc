@@ -31,11 +31,6 @@ jobs:
         java-package: jdk
         architecture: x64 
 
-    - name: Comment
-      run: |
-        echo REGION = $AWS_REGION
-        echo EKS_CLUSTER = $EKS_CLUSTER
-
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v1
       with:
@@ -113,6 +108,8 @@ jobs:
 
     - name: Configure Spinnaker with Exposed Services
       run: |       
+        echo The API_URL = $API_URL
+        echo The UI_URL = $UI_URL
         hal config security api edit --override-base-url $API_URL
         hal config security ui edit --override-base-url $UI_URL
 
