@@ -49,10 +49,14 @@ jobs:
       run: |
         curl -O https://raw.githubusercontent.com/spinnaker/halyard/master/install/debian/InstallHalyard.sh
         sudo bash InstallHalyard.sh --user runner && echo "success" || echo "failure"
-        hal -v
+        hal -v 
         echo sudo update-halyard && echo "success" || echo "failure"
         
     - name: Retrieve Amazon EKS cluster kubectl contexts
+      run: |
+        hal config provider kubernetes enable
+    
+    - name: Retrieve Amazon EKS cluster kubectl contexts2
       run: |
         hal config provider kubernetes enable
         kubectl config use-context eks-spinnaker
@@ -61,7 +65,7 @@ jobs:
         TOKEN=$(kubectl get secret --context $CONTEXT $(kubectl get serviceaccount spinnaker-service-account --context $CONTEXT -n spinnaker -o jsonpath='{.secrets[0].name}') -n spinnaker -o jsonpath='{.data.token}' | base64 --decode)
         kubectl config set-credentials ${CONTEXT}-token-user --token $TOKEN
         kubectl config set-context $CONTEXT --user ${CONTEXT}-token-user
-        hal config provider kubernetes account add eks-spinnaker --context $CONTEXT
+        hal config provider kubernetes account add eks-spinnaker --context $CONTEXT        
 
     - name: Enable artifact Support
       run: |
@@ -83,7 +87,7 @@ jobs:
 
     - name: Deploy Spinnaker
       run: |
-        hal deploy apply --no-validate     
+        hal deploy apply --no-validate --wait-for-completion   
 
     - name: Expose Behind LoadBalancer
       run: |
@@ -99,7 +103,7 @@ jobs:
         
     - name: ReDeploy Spinnaker
       run: |
-        hal deploy apply --no-validate          
+        hal deploy apply --no-validate --wait-for-completion      
 
     - name: Config OAuth
       run: |
@@ -114,7 +118,7 @@ jobs:
 
     - name: ReDeploy Spinnaker Again
       run: |
-        hal deploy apply --no-validate
+        hal deploy apply --no-validate --wait-for-completion
 
 
 
