@@ -84,15 +84,16 @@ jobs:
 
     - name: Config OAuth
       run: |
+        export NAMESPACE=spinnaker
         export CLIENT_ID=${{ secrets.CLIENT_ID }}
         export CLIENT_SECRET=${{ secrets.CLIENT_SECRET }}
         export API_URL=$(kubectl -n $NAMESPACE get svc spin-gate-public -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
         export UI_URL=$(kubectl -n $NAMESPACE get svc spin-deck-public -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
         hal config security authn oauth2 edit --client-id $CLIENT_ID --client-secret $CLIENT_SECRET --provider github
         hal config security authn oauth2 enable
-        hal config security authn oauth2 edit --pre-established-redirect-uri http://${API_URL}/login
-        hal config security ui edit --override-base-url http://${UI_URL}
-        hal config security api edit --override-base-url http://${API_URL} 
+        hal config security authn oauth2 edit --pre-established-redirect-uri http://$API_URL/login
+        hal config security ui edit --override-base-url http://$UI_URL
+        hal config security api edit --override-base-url http://$API_URL 
     
     - name: Deploy Spinnaker
       run: |
@@ -102,8 +103,8 @@ jobs:
     - name: Expose Behind LoadBalancer
       run: |
         export NAMESPACE=spinnaker
-        kubectl -n spinnaker expose service spin-gate --type LoadBalancer --port 80 --target-port 8084 --name spin-gate-public
-        kubectl -n spinnaker expose service spin-deck --type LoadBalancer --port 80 --target-port 9000 --name spin-deck-public
+        kubectl -n $NAMESPACE expose service spin-gate --type LoadBalancer --port 80 --target-port 8084 --name spin-gate-public
+        kubectl -n $NAMESPACE expose service spin-deck --type LoadBalancer --port 80 --target-port 9000 --name spin-deck-public
         export API_URL=$(kubectl -n $NAMESPACE get svc spin-gate-public -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
         export UI_URL=$(kubectl -n $NAMESPACE get svc spin-deck-public -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
 
