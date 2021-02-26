@@ -84,7 +84,6 @@ jobs:
 
     - name: Deploy Spinnaker
       run: |
-        cat .hal/config
         hal deploy apply --no-validate        
 
     - name: Config OAuth
@@ -116,7 +115,6 @@ jobs:
 
     - name: ReDeploy Spinnaker
       run: |
-        cat .hal/config
         hal deploy apply --no-validate
 
 
