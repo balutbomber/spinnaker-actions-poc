@@ -27,14 +27,6 @@ jobs:
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: us-east-1
 
-    - name: Create ubuntu user
-      run: |
-        sudo groupadd ubuntu
-        sudo useradd -g ubuntu -s /bin/bash -d /home/ubuntu ubuntu
-        sudo mkdir -p /home/ubuntu
-        sudo chown -R ubuntu:ubuntu /home/ubuntu
-        sudo sh -c 'echo "ubuntu	ALL=(ALL:ALL) NOPASSWD:ALL" >> /etc/sudoers'
-
     - name: Install kubectl
       run: |
         curl -LO https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl
@@ -90,6 +82,23 @@ jobs:
       run: |
         hal config deploy edit --type distributed --account-name eks-spinnaker
 
+    - name: Config OAuth
+      run: |
+        export CLIENT_ID=${{ secrets.CLIENT_ID }}
+        export CLIENT_SECRET=${{ secrets.CLIENT_SECRET }}
+        export API_URL=$(kubectl -n $NAMESPACE get svc spin-gate-public -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+        export UI_URL=$(kubectl -n $NAMESPACE get svc spin-deck-public -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+        hal config security authn oauth2 edit --client-id $CLIENT_ID --client-secret $CLIENT_SECRET --provider github
+        hal config security authn oauth2 enable
+        hal config security authn oauth2 edit --pre-established-redirect-uri http://${API_URL}/login
+        hal config security ui edit --override-base-url http://${UI_URL}
+        hal config security api edit --override-base-url http://${API_URL} 
+    
+    - name: Deploy Spinnaker
+      run: |
+        cat .hal/config
+        hal deploy apply --no-validate
+
     - name: Expose Behind LoadBalancer
       run: |
         export NAMESPACE=spinnaker
@@ -104,25 +113,10 @@ jobs:
         # Configure the URL for Deck
         hal config security ui edit --override-base-url http://${UI_URL}
 
-    - name: Config OAuth
-      run: |
-        export CLIENT_ID=${{ secrets.CLIENT_ID }}
-        export CLIENT_SECRET=${{ secrets.CLIENT_SECRET }}
-        export API_URL=$(kubectl -n $NAMESPACE get svc spin-gate-public -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
-        export UI_URL=$(kubectl -n $NAMESPACE get svc spin-deck-public -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
-
-        hal config security authn oauth2 edit --client-id $CLIENT_ID --client-secret $CLIENT_SECRET --provider github
-        hal config security authn oauth2 enable
-
-        hal config security authn oauth2 edit --pre-established-redirect-uri http://${API_URL}/login
-
-        hal config security ui edit --override-base-url http://${UI_URL}
-
-        hal config security api edit --override-base-url http://${API_URL} 
-    
-    - name: Deploy Spinnaker
+    - name: ReDeploy Spinnaker
       run: |
         cat .hal/config
         hal deploy apply --no-validate
+
 
 
