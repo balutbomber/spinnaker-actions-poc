@@ -44,10 +44,6 @@ jobs:
 
         #Verify the installation of aws-iam-authenticator
         aws-iam-authenticator help            
-
-    - name: Get Kube Config
-      run: |
-        aws eks update-kubeconfig --name eks-spinnaker --region us-east-1 --alias eks-spinnaker
     
     - name: Install Hallyard
       run: |
@@ -56,23 +52,16 @@ jobs:
         hal -v
         sudo update-halyard && echo "success" || echo "failure"
         
-
-    # - name: Move Halyard config to default area
-    #   run: |
-    #     mkdir .hal
-    #     mv halconfig .hal/config
-    - name: Set Version
+    - name: Retrieve Amazon EKS cluster kubectl contexts
       run: |
-        export VERSION=1.24.4
-        hal config version edit --version $VERSION
-
-    - name: Set Persistent Storage
-      run: |
-        hal config storage s3 edit --access-key-id ${{ secrets.AWS_ACCESS_KEY_ID }} --secret-access-key ${{ secrets.AWS_SECRET_ACCESS_KEY }} --no-validate
-
-    - name: Add Spinnaker cluster to Kubernetes provider
-      run: |
-        hal config provider kubernetes account add eks-spinnaker --context eks-spinnaker
+        hal config provider kubernetes enable
+        kubectl config use-context eks-spinnaker
+        CONTEXT=$(kubectl config current-context)
+        kubectl apply --context $CONTEXT -f https://www.spinnaker.io/downloads/kubernetes/service-account.yml
+        TOKEN=$(kubectl get secret --context $CONTEXT $(kubectl get serviceaccount spinnaker-service-account --context $CONTEXT -n spinnaker -o jsonpath='{.secrets[0].name}') -n spinnaker -o jsonpath='{.data.token}' | base64 --decode)
+        kubectl config set-credentials ${CONTEXT}-token-user --token $TOKEN
+        kubectl config set-context $CONTEXT --user ${CONTEXT}-token-user
+        hal config provider kubernetes account add eks-spinnaker --context $CONTEXT
 
     - name: Enable artifact Support
       run: |
@@ -82,9 +71,35 @@ jobs:
       run: |
         hal config deploy edit --type distributed --account-name eks-spinnaker
 
+    - name: Configure Spinnaker to use AWS S3
+      run: |
+        hal config storage s3 edit --access-key-id ${{ secrets.AWS_ACCESS_KEY_ID }} --secret-access-key ${{ secrets.AWS_SECRET_ACCESS_KEY }} --no-validate
+        hal config storage edit --type s3
+
+    - name: Set Spinnaker Version
+      run: |
+        export VERSION=1.24.4
+        hal config version edit --version $VERSION
+
     - name: Deploy Spinnaker
       run: |
-        hal deploy apply --no-validate        
+        hal deploy apply --no-validate     
+
+    - name: Expose Behind LoadBalancer
+      run: |
+        export NAMESPACE=spinnaker
+        kubectl -n $NAMESPACE expose service spin-gate --type LoadBalancer --port 80 --target-port 8084 --name spin-gate-public
+        kubectl -n $NAMESPACE expose service spin-deck --type LoadBalancer --port 80 --target-port 9000 --name spin-deck-public
+        export API_URL=$(kubectl -n $NAMESPACE get svc spin-gate-public -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+        export UI_URL=$(kubectl -n $NAMESPACE get svc spin-deck-public -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+        # Configure the URL for Gate
+        hal config security api edit --override-base-url http://$API_URL
+        # Configure the URL for Deck
+        hal config security ui edit --override-base-url http://$UI_URL
+        
+    - name: ReDeploy Spinnaker
+      run: |
+        hal deploy apply --no-validate          
 
     - name: Config OAuth
       run: |
@@ -96,24 +111,8 @@ jobs:
         hal config security authn oauth2 edit --client-id $CLIENT_ID --client-secret $CLIENT_SECRET --provider github
         hal config security authn oauth2 enable
         hal config security authn oauth2 edit --pre-established-redirect-uri http://$API_URL/login
-        hal config security ui edit --override-base-url http://$UI_URL
-        hal config security api edit --override-base-url http://$API_URL 
 
-    - name: Expose Behind LoadBalancer
-      run: |
-        export NAMESPACE=spinnaker
-        kubectl -n $NAMESPACE expose service spin-gate --type LoadBalancer --port 80 --target-port 8084 --name spin-gate-public
-        kubectl -n $NAMESPACE expose service spin-deck --type LoadBalancer --port 80 --target-port 9000 --name spin-deck-public
-        export API_URL=$(kubectl -n $NAMESPACE get svc spin-gate-public -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
-        export UI_URL=$(kubectl -n $NAMESPACE get svc spin-deck-public -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
-
-        # Configure the URL for Gate
-        hal config security api edit --override-base-url http://${API_URL}
-
-        # Configure the URL for Deck
-        hal config security ui edit --override-base-url http://${UI_URL}
-
-    - name: ReDeploy Spinnaker
+    - name: ReDeploy Spinnaker Again
       run: |
         hal deploy apply --no-validate
 
