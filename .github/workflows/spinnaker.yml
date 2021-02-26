@@ -50,7 +50,7 @@ jobs:
         curl -O https://raw.githubusercontent.com/spinnaker/halyard/master/install/debian/InstallHalyard.sh
         sudo bash InstallHalyard.sh --user runner && echo "success" || echo "failure"
         hal -v
-        sudo update-halyard && echo "success" || echo "failure"
+        echo sudo update-halyard && echo "success" || echo "failure"
         
     - name: Retrieve Amazon EKS cluster kubectl contexts
       run: |
