@@ -69,7 +69,6 @@ jobs:
       run: |
         mkdir .hal
         mv halconfig .hal/config
-        cat .hal/config
 
     - name: Set Persistent Storage
       run: |
@@ -77,11 +76,12 @@ jobs:
 
     - name: Set Version
       run: |
-        export VERSION=1.19.2
+        export VERSION=1.24.4
         hal config version edit --version $VERSION
     
     - name: Deploy Spinnaker
       run: |
+        cat .hal/config
         hal deploy apply --no-validate
 
 
