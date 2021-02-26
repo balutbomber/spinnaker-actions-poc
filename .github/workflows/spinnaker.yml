@@ -73,7 +73,7 @@ jobs:
 
     - name: Set Persistent Storage
       run: |
-        storage s3 edit --access-key-id ${{ secrets.AWS_ACCESS_KEY_ID }} --secret-access-key ${{ secrets.AWS_SECRET_ACCESS_KEY }} --no-validate
+        hal config storage s3 edit --access-key-id ${{ secrets.AWS_ACCESS_KEY_ID }} --secret-access-key ${{ secrets.AWS_SECRET_ACCESS_KEY }} --no-validate
 
     - name: Set Version
       run: |
