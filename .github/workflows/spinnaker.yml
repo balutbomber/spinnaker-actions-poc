@@ -31,6 +31,11 @@ jobs:
         java-package: jdk
         architecture: x64 
 
+    - name: Comment
+      run: |
+        echo REGION = $AWS_REGION
+        echo EKS_CLUSTER = $EKS_CLUSTER
+
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v1
       with:
