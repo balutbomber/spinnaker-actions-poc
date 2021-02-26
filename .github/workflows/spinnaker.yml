@@ -7,7 +7,7 @@ on:
 env:
   AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY_ID }}
   AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-  AWS_REGION: us-east-1
+  REGION: us-east-1
   CLIENT_ID: ${{ secrets.CLIENT_ID }}
   CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}      
   EKS_CLUSTER: spinnaker-dev
@@ -36,7 +36,7 @@ jobs:
       with:
         aws-access-key-id: $AWS_ACCESS_KEY
         aws-secret-access-key: $AWS_SECRET_ACCESS_KEY
-        aws-region: $AWS_REGION
+        aws-region: $REGION
 
     - name: Install kubectl
       run: |
@@ -55,7 +55,7 @@ jobs:
 
         # Verify the installation of aws-iam-authenticator
         aws-iam-authenticator help      
-        aws eks update-kubeconfig --name $EKS_CLUSTER --region $AWS_REGION --alias $EKS_CLUSTER
+        aws eks update-kubeconfig --name $EKS_CLUSTER --region $REGION --alias $EKS_CLUSTER
     
     - name: Install Hallyard
       run: |
