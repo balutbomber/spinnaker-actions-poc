@@ -56,9 +56,6 @@ jobs:
     - name: Retrieve Amazon EKS cluster kubectl contexts
       run: |
         hal config provider kubernetes enable
-    
-    - name: Retrieve Amazon EKS cluster kubectl contexts2
-      run: |
         kubectl config use-context eks-spinnaker
         CONTEXT=$(kubectl config current-context)
         kubectl apply --context $CONTEXT -f https://www.spinnaker.io/downloads/kubernetes/service-account.yml
@@ -87,34 +84,35 @@ jobs:
 
     - name: Deploy Spinnaker
       run: |
-        hal deploy apply --no-validate --wait-for-completion   
+        hal deploy apply --no-validate  
 
     - name: Expose Behind LoadBalancer
       run: |
         export NAMESPACE=spinnaker
         kubectl -n $NAMESPACE expose service spin-gate --type LoadBalancer --port 80 --target-port 8084 --name spin-gate-public
         kubectl -n $NAMESPACE expose service spin-deck --type LoadBalancer --port 80 --target-port 9000 --name spin-deck-public
-        export API_URL=$(kubectl -n $NAMESPACE get svc spin-gate-public -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
-        export UI_URL=$(kubectl -n $NAMESPACE get svc spin-deck-public -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+        export API_URL=http://$(kubectl -n $NAMESPACE get svc spin-gate-public -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+        export UI_URL=http://$(kubectl -n $NAMESPACE get svc spin-deck-public -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+        echo $API_URL
+        echo $UI_URL
         # Configure the URL for Gate
-        hal config security api edit --override-base-url http://$API_URL
+        hal config security api edit --override-base-url $API_URL
         # Configure the URL for Deck
-        hal config security ui edit --override-base-url http://$UI_URL
+        hal config security ui edit --override-base-url $UI_URL
         
     - name: ReDeploy Spinnaker
       run: |
-        hal deploy apply --no-validate --wait-for-completion      
+        hal deploy apply --no-validate  
 
     - name: Config OAuth
       run: |
         export NAMESPACE=spinnaker
         export CLIENT_ID=${{ secrets.CLIENT_ID }}
         export CLIENT_SECRET=${{ secrets.CLIENT_SECRET }}
-        export API_URL=$(kubectl -n $NAMESPACE get svc spin-gate-public -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
-        export UI_URL=$(kubectl -n $NAMESPACE get svc spin-deck-public -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+        export API_URL=http://$(kubectl -n $NAMESPACE get svc spin-gate-public -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')/login
         hal config security authn oauth2 edit --client-id $CLIENT_ID --client-secret $CLIENT_SECRET --provider github
         hal config security authn oauth2 enable
-        hal config security authn oauth2 edit --pre-established-redirect-uri http://$API_URL/login
+        hal config security authn oauth2 edit --pre-established-redirect-uri $API_URL
 
     - name: ReDeploy Spinnaker Again
       run: |
