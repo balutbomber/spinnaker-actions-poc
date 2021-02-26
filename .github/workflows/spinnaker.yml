@@ -43,7 +43,8 @@ jobs:
         echo 'export PATH=$HOME/bin:$PATH' >> ~/.bashrc
 
         #Verify the installation of aws-iam-authenticator
-        aws-iam-authenticator help            
+        aws-iam-authenticator help      
+        aws eks update-kubeconfig --name eks-spinnaker --region us-east-1 --alias eks-spinnaker      
     
     - name: Install Hallyard
       run: |
