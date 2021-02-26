@@ -122,8 +122,6 @@ deploymentConfigurations:
       bucket: spinnakertest2
       rootFolder: front50
       pathStyleAccess: false
-      accessKeyId: AKIAYPPEH5ZWKK7FMFOJ
-      secretAccessKey: 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
     oracle: {}
   features:
     chaos: false

@@ -71,6 +71,10 @@ jobs:
         mv halconfig .hal/config
         cat .hal/config
 
+    - name: Set Persistent Storage
+      run: |
+        storage s3 edit --access-key-id ${{ secrets.AWS_ACCESS_KEY_ID }} --secret-access-key ${{ secrets.AWS_SECRET_ACCESS_KEY }} --no-validate
+
     - name: Set Version
       run: |
         export VERSION=1.19.2
