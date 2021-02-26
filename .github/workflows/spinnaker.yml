@@ -61,7 +61,7 @@ jobs:
       run: |
         curl -O https://raw.githubusercontent.com/spinnaker/halyard/master/install/debian/InstallHalyard.sh
         sudo bash InstallHalyard.sh --user runner && echo "success" || echo "failure"
-        sudo update-halyard
+        sudo update-halyard && echo "success" || echo "failure"
 
     - name: Move Halyard config to default area
       run: |
