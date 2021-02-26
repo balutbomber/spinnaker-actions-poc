@@ -65,19 +65,60 @@ jobs:
         sudo update-halyard && echo "success" || echo "failure"
         
 
-    - name: Move Halyard config to default area
+    # - name: Move Halyard config to default area
+    #   run: |
+    #     mkdir .hal
+    #     mv halconfig .hal/config
+    - name: Set Version
       run: |
-        mkdir .hal
-        mv halconfig .hal/config
+        export VERSION=1.24.4
+        hal config version edit --version $VERSION
 
     - name: Set Persistent Storage
       run: |
         hal config storage s3 edit --access-key-id ${{ secrets.AWS_ACCESS_KEY_ID }} --secret-access-key ${{ secrets.AWS_SECRET_ACCESS_KEY }} --no-validate
 
-    - name: Set Version
+    - name: Add Spinnaker cluster to Kubernetes provider
       run: |
-        export VERSION=1.24.4
-        hal config version edit --version $VERSION
+        hal config provider kubernetes account add eks-spinnaker --context eks-spinnaker
+
+    - name: Enable artifact Support
+      run: |
+        hal config features edit --artifacts true
+
+    - name: Configure Spinnaker to install in Kubernetes
+      run: |
+        hal config deploy edit --type distributed --account-name eks-spinnaker
+
+    - name: Expose Behind LoadBalancer
+      run: |
+        export NAMESPACE=spinnaker
+        kubectl -n spinnaker expose service spin-gate --type LoadBalancer --port 80 --target-port 8084 --name spin-gate-public
+        kubectl -n spinnaker expose service spin-deck --type LoadBalancer --port 80 --target-port 9000 --name spin-deck-public
+        export API_URL=$(kubectl -n $NAMESPACE get svc spin-gate-public -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+        export UI_URL=$(kubectl -n $NAMESPACE get svc spin-deck-public -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+
+        # Configure the URL for Gate
+        hal config security api edit --override-base-url http://${API_URL}
+
+        # Configure the URL for Deck
+        hal config security ui edit --override-base-url http://${UI_URL}
+
+    - name: Config OAuth
+      run: |
+        export CLIENT_ID=${{ secrets.CLIENT_ID }}
+        export CLIENT_SECRET=${{ secrets.CLIENT_SECRET }}
+        export API_URL=$(kubectl -n $NAMESPACE get svc spin-gate-public -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+        export UI_URL=$(kubectl -n $NAMESPACE get svc spin-deck-public -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+
+        hal config security authn oauth2 edit --client-id $CLIENT_ID --client-secret $CLIENT_SECRET --provider github
+        hal config security authn oauth2 enable
+
+        hal config security authn oauth2 edit --pre-established-redirect-uri http://${API_URL}/login
+
+        hal config security ui edit --override-base-url http://${UI_URL}
+
+        hal config security api edit --override-base-url http://${API_URL} 
     
     - name: Deploy Spinnaker
       run: |
