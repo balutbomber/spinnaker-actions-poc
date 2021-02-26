@@ -82,6 +82,11 @@ jobs:
       run: |
         hal config deploy edit --type distributed --account-name eks-spinnaker
 
+    - name: Deploy Spinnaker
+      run: |
+        cat .hal/config
+        hal deploy apply --no-validate        
+
     - name: Config OAuth
       run: |
         export NAMESPACE=spinnaker
@@ -94,11 +99,6 @@ jobs:
         hal config security authn oauth2 edit --pre-established-redirect-uri http://$API_URL/login
         hal config security ui edit --override-base-url http://$UI_URL
         hal config security api edit --override-base-url http://$API_URL 
-    
-    - name: Deploy Spinnaker
-      run: |
-        cat .hal/config
-        hal deploy apply --no-validate
 
     - name: Expose Behind LoadBalancer
       run: |
