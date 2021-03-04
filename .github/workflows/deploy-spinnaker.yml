@@ -4,9 +4,6 @@ on:
   push:
     branches: [ main ]
 
-environment:
-  name: main
-
 env:
   AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY_ID }}
   AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -20,6 +17,8 @@ env:
 
 jobs:
   deploy_spinnaker:
+    environment:
+      name: main
     name: Deploy Spinnaker
     runs-on: ubuntu-latest
 
