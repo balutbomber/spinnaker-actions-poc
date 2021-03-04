@@ -81,12 +81,10 @@ jobs:
         hal config provider kubernetes account add $EKS_CLUSTER --context $CONTEXT        
 
     - name: Enable artifact Support
-      run: |
-        hal config features edit --artifacts true
+      run: hal config features edit --artifacts true
 
     - name: Configure Spinnaker to install in Kubernetes
-      run: |
-        hal config deploy edit --type distributed --account-name $EKS_CLUSTER
+      run: hal config deploy edit --type distributed --account-name $EKS_CLUSTER
 
     - name: Configure Spinnaker to use AWS S3
       run: |
@@ -94,12 +92,10 @@ jobs:
         hal config storage edit --type s3
 
     - name: Set Spinnaker Version
-      run: |
-        hal config version edit --version $SPINNAKER_VERSION
+      run: hal config version edit --version $SPINNAKER_VERSION
 
     - name: Deploy Spinnaker
-      run: |
-        hal deploy apply --no-validate  
+      run: hal deploy apply --no-validate  
       
     - name: Expose Services Behind LoadBalancer
       run: |
@@ -116,8 +112,7 @@ jobs:
         hal config security ui edit --override-base-url $UI_URL
 
     - name: ReDeploy Spinnaker
-      run: |
-        hal deploy apply --no-validate  
+      run: hal deploy apply --no-validate  
 
     - name: Config OAuth
       run: |
@@ -126,8 +121,7 @@ jobs:
         hal config security authn oauth2 edit --pre-established-redirect-uri $API_URL/login
 
     - name: ReDeploy Spinnaker Again
-      run: |
-        hal deploy apply --no-validate
+      run: hal deploy apply --no-validate
 
 
 
