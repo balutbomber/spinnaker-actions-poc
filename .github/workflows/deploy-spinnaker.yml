@@ -106,8 +106,6 @@ jobs:
 
     - name: Configure Spinnaker with Exposed Services
       run: |       
-        echo The API_URL = $API_URL
-        echo The UI_URL = $UI_URL
         hal config security api edit --override-base-url $API_URL
         hal config security ui edit --override-base-url $UI_URL
 
@@ -122,6 +120,9 @@ jobs:
 
     - name: ReDeploy Spinnaker Again
       run: hal deploy apply --no-validate
-
-
+   
+    - name: Display urls
+      run: |
+        echo The API URL = $API_URL
+        echo The UI URL = $UI_URL
 
