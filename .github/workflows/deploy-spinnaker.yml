@@ -71,7 +71,7 @@ jobs:
     - name: Configure kubectl contexts
       run: |
         kubectl apply --context $CONTEXT -f https://www.spinnaker.io/downloads/kubernetes/service-account.yml
-        TOKEN=$(kubectl get secret --context $CONTEXT $(kubectl get serviceaccount spinnaker-service-account --context $CONTEXT -n $NAMESPACE -o jsonpath='{.secrets[0].name}') -n spinnaker -o jsonpath='{.data.token}' | base64 --decode)
+        TOKEN=$(kubectl get secret --context $CONTEXT $(kubectl get serviceaccount spinnaker-service-account --context $CONTEXT -n $EKS_NAMESPACE -o jsonpath='{.secrets[0].name}') -n spinnaker -o jsonpath='{.data.token}' | base64 --decode)
         
         kubectl config set-credentials ${CONTEXT}-token-user --token $TOKEN
         kubectl config set-context $CONTEXT --user ${CONTEXT}-token-user
@@ -100,10 +100,10 @@ jobs:
       
     - name: Expose Services Behind LoadBalancer
       run: |
-        kubectl -n $NAMESPACE expose service spin-gate --type LoadBalancer --port 80 --target-port 8084 --name spin-gate-public && echo "exposed" || echo "already exposed"
-        kubectl -n $NAMESPACE expose service spin-deck --type LoadBalancer --port 80 --target-port 9000 --name spin-deck-public && echo "exposed" || echo "already exposed"        
-        echo "API_URL=http://$(kubectl -n $NAMESPACE get svc spin-gate-public -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')" >> $GITHUB_ENV
-        echo "UI_URL=http://$(kubectl -n $NAMESPACE get svc spin-deck-public -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')" >> $GITHUB_ENV
+        kubectl -n $EKS_NAMESPACE expose service spin-gate --type LoadBalancer --port 80 --target-port 8084 --name spin-gate-public && echo "exposed" || echo "already exposed"
+        kubectl -n $EKS_NAMESPACE expose service spin-deck --type LoadBalancer --port 80 --target-port 9000 --name spin-deck-public && echo "exposed" || echo "already exposed"        
+        echo "API_URL=http://$(kubectl -n $EKS_NAMESPACE get svc spin-gate-public -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')" >> $GITHUB_ENV
+        echo "UI_URL=http://$(kubectl -n $EKS_NAMESPACE get svc spin-deck-public -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')" >> $GITHUB_ENV
 
     - name: Configure Spinnaker with Exposed Services
       run: |       
