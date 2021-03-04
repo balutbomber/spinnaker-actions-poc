@@ -4,12 +4,16 @@ on:
   push:
     branches: [ main ]
 
+environment:
+  name: main
+
 env:
   AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY_ID }}
   AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
   AWS_REGION: us-east-1
-  CLIENT_ID: ${{ secrets.GITHUB_CLIENT_ID }}
-  CLIENT_SECRET: ${{ secrets.GITHUB_CLIENT_SECRET }}      
+  # GITHUB_ is reserved, will start with GH
+  GITHUB_CLIENT_ID: ${{ secrets.GH_CLIENT_ID }}
+  GITHUB_CLIENT_SECRET: ${{ secrets.GH_CLIENT_SECRET }}      
   EKS_CLUSTER: spinnaker-cluster
   EKS_NAMESPACE: spinnaker
   SPINNAKER_VERSION: 1.24.4
@@ -118,7 +122,7 @@ jobs:
 
     - name: Config OAuth
       run: |
-        hal config security authn oauth2 edit --client-id $CLIENT_ID --client-secret $CLIENT_SECRET --provider github
+        hal config security authn oauth2 edit --client-id $GITHUB_CLIENT_ID --client-secret $GITHUB_CLIENT_SECRET --provider github
         hal config security authn oauth2 enable
         hal config security authn oauth2 edit --pre-established-redirect-uri $API_URL/login
 
