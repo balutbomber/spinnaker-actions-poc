@@ -2,23 +2,22 @@ name: Deploy Spinnaker
 
 on:
   push:
-    branches: [ master ]
+    branches: [ main ]
 
 env:
   AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY_ID }}
   AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
   AWS_REGION: us-east-1
-  CLIENT_ID: ${{ secrets.CLIENT_ID }}
-  CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}      
+  CLIENT_ID: ${{ secrets.GITHUB_CLIENT_ID }}
+  CLIENT_SECRET: ${{ secrets.GITHUB_CLIENT_SECRET }}      
   EKS_CLUSTER: spinnaker-cluster
-  NAMESPACE: spinnaker
+  EKS_NAMESPACE: spinnaker
   SPINNAKER_VERSION: 1.24.4
 
 jobs:
   deploy_spinnaker:
     name: Deploy Spinnaker
     runs-on: ubuntu-latest
-
 
     steps:
     - name: Checkout
@@ -60,7 +59,7 @@ jobs:
     - name: Install Hallyard
       run: |
         curl -O https://raw.githubusercontent.com/spinnaker/halyard/master/install/debian/InstallHalyard.sh
-        sudo bash InstallHalyard.sh --user runner && echo "Successfully installed Halyard" || echo "Halyard still starting but moving on"
+        sudo bash InstallHalyard.sh --user runner && echo "Successfully installed Halyard" || echo "Halyard still starting but moving on, this is ok and expected"
         hal -v 
 
     - name: Set Amazon EKS cluster kubectl context
