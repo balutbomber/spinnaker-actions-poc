@@ -5,12 +5,16 @@ on:
     branches: [ main ]
 
 env:
+  # THE BELOW ITEMS COME FROM GITHUB ENVIRONMENT SECRETS
   AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY_ID }}
   AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-  AWS_REGION: us-east-1
-  # GITHUB_ is reserved, will start with GH
   GITHUB_CLIENT_ID: ${{ secrets.GH_CLIENT_ID }}
   GITHUB_CLIENT_SECRET: ${{ secrets.GH_CLIENT_SECRET }}      
+  GITHUB_PERSONAL_ACCESS_TOKEN: ${{ secrets.GH_PERSONAL_ACCESS_TOKEN }}  # TODO DOCUMENT THIS
+
+  # THE BELOW ITEMS SHOULD BE CONFIGURABLE
+  AWS_REGION: us-east-1
+  GITHUB_ORGANIZATION: ontargetcomputing  # TODO DOCUMENT THIS
   EKS_CLUSTER: spinnaker-cluster
   EKS_NAMESPACE: spinnaker
   SPINNAKER_VERSION: 1.24.4
@@ -89,7 +93,7 @@ jobs:
     - name: Configure Spinnaker to use AWS S3
       run: |
         hal config storage s3 edit --access-key-id $AWS_ACCESS_KEY --secret-access-key $AWS_SECRET_ACCESS_KEY --no-validate
-        hal config storage edit --type s3
+        hal config storage edit --type s3 --no-validate
 
     - name: Set Spinnaker Version
       run: hal config version edit --version $SPINNAKER_VERSION
@@ -104,11 +108,6 @@ jobs:
         echo "API_URL=http://$(kubectl -n $EKS_NAMESPACE get svc spin-gate-public -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')" >> $GITHUB_ENV
         echo "UI_URL=http://$(kubectl -n $EKS_NAMESPACE get svc spin-deck-public -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')" >> $GITHUB_ENV
 
-    - name: Configure Spinnaker with Exposed Services
-      run: |       
-        hal config security api edit --override-base-url $API_URL
-        hal config security ui edit --override-base-url $UI_URL
-
     - name: ReDeploy Spinnaker
       run: hal deploy apply --no-validate  
 
@@ -117,6 +116,17 @@ jobs:
         hal config security authn oauth2 edit --client-id $GITHUB_CLIENT_ID --client-secret $GITHUB_CLIENT_SECRET --provider github
         hal config security authn oauth2 enable
         hal config security authn oauth2 edit --pre-established-redirect-uri $API_URL/login
+
+    - name: Configure Spinnaker with Exposed Services
+      run: |       
+        hal config security api edit --override-base-url $API_URL
+        hal config security ui edit --override-base-url $UI_URL
+
+    - name: Setup Github organization for authorization
+      run: |
+        hal config security authz github edit --accessToken $GITHUB_PERSONAL_ACCESS_TOKEN --organization $GITHUB_ORGANIZATION --baseUrl https://api.github.com
+        hal config security authz edit --type github
+        hal config security authz enable
 
     - name: ReDeploy Spinnaker Again
       run: hal deploy apply --no-validate
